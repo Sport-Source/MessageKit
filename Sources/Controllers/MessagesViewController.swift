@@ -37,6 +37,9 @@ UICollectionViewDelegateFlowLayout, UICollectionViewDataSource, UIGestureRecogni
     /// The `InputBarAccessoryView` used as the `inputAccessoryView` in the view controller.
     open lazy var messageInputBar = InputBarAccessoryView()
 
+    /// The message bar is not added as an accessory view anymore. Manage the bottom constraint manually.
+    open var messageInputBarBottomConstraint: NSLayoutConstraint!
+
     /// A Boolean value that determines whether the `MessagesCollectionView` scrolls to the
     /// last item whenever the `InputTextView` begins editing.
     ///
@@ -78,10 +81,6 @@ UICollectionViewDelegateFlowLayout, UICollectionViewDataSource, UIGestureRecogni
         return true
     }
 
-    open override var inputAccessoryView: UIView? {
-        return messageInputBar
-    }
-
     open override var shouldAutorotate: Bool {
         return false
     }
@@ -109,8 +108,8 @@ UICollectionViewDelegateFlowLayout, UICollectionViewDataSource, UIGestureRecogni
 
     internal var messageCollectionViewBottomInset: CGFloat = 0 {
         didSet {
-            messagesCollectionView.contentInset.bottom = messageCollectionViewBottomInset
-            messagesCollectionView.scrollIndicatorInsets.bottom = messageCollectionViewBottomInset
+            //messagesCollectionView.contentInset.bottom = messageCollectionViewBottomInset
+            //messagesCollectionView.scrollIndicatorInsets.bottom = messageCollectionViewBottomInset
         }
     }
 
@@ -227,9 +226,6 @@ UICollectionViewDelegateFlowLayout, UICollectionViewDataSource, UIGestureRecogni
         messagesCollectionView.keyboardDismissMode = .interactive
         messagesCollectionView.alwaysBounceVertical = true
         messagesCollectionView.backgroundColor = .collectionViewBackground
-        if #available(iOS 13.0, *) {
-            messagesCollectionView.automaticallyAdjustsScrollIndicatorInsets = false
-        }
     }
 
     private func setupDelegates() {
@@ -239,16 +235,24 @@ UICollectionViewDelegateFlowLayout, UICollectionViewDataSource, UIGestureRecogni
 
     private func setupSubviews() {
         view.addSubview(messagesCollectionView)
+        view.addSubview(messageInputBar)
     }
 
     private func setupConstraints() {
         messagesCollectionView.translatesAutoresizingMaskIntoConstraints = false
         
         let top = messagesCollectionView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor)
-        let bottom = messagesCollectionView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
         let leading = messagesCollectionView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor)
         let trailing = messagesCollectionView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor)
-        NSLayoutConstraint.activate([top, bottom, trailing, leading])
+        NSLayoutConstraint.activate([top, trailing, leading])
+
+        messageInputBar.translatesAutoresizingMaskIntoConstraints = false
+
+        let messagesBottom = messagesCollectionView.bottomAnchor.constraint(equalTo: messageInputBar.topAnchor)
+        messageInputBarBottomConstraint = messageInputBar.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+        let messageInputBarLeading = messageInputBar.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor)
+        let messageInputBarTrailing = messageInputBar.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor)
+        NSLayoutConstraint.activate([messagesBottom, messageInputBarBottomConstraint, messageInputBarLeading, messageInputBarTrailing])
     }
 
     // MARK: - Typing Indicator API
